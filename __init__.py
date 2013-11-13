@@ -31,9 +31,9 @@ class TweetShell:
 				"whoami"  : self.whoami,
 				"tweet"   : self.tweet,
 			}
-	def shell_loop(self):
 		self.__current_user = None
 		self.__prompt       = "> "
+	def shell_loop(self):
 		try:
 			while True:
 				try:
@@ -43,7 +43,7 @@ class TweetShell:
 				except EOFError:
 					raise
 				except KeyboardInterrupt:
-					sys.stdout.write("\n")
+					sys.stdout.write("^C\n")
 				except:
 					sys.stdout.write(traceback.format_exc(sys.exc_info()[2]))
 		except EOFError:
@@ -78,13 +78,17 @@ class TweetShell:
 		fp = open(self.__authfile, "w")
 		fp.writelines(org + ["%s %s %s %s %s\n" % (k, v._consumer.key, v._consumer.secret, v.access_token.key, v.access_token.secret) for k, v in self.__auth.items()])
 	def login(self, *argv):
-		term = open("/dev/tty", "r+w")
-		for sn in self.__auth.keys():
-			term.write("  @%s\n" % sn)
-		term.write("WHICH?> ")
-		sn = term.readline().strip()
+		term = open(os.ctermid(), "r+w")
+		if argv:
+			sn = argv[0]
+		else:
+			for sn in self.__auth.keys():
+				term.write("* @%s\n" % sn)
+			term.write("WHICH?> ")
+			sn = term.readline().strip()
 		if sn not in self.__auth.keys():
-			term.write("NOT FOUND.\n")
+			term.write("sn was NOT found.\n" % sn)
+			return
 		self.__current_user = self.__auth[sn]
 		self.__prompt = "%s> " % sn
 	def whoami(self, *argv):
