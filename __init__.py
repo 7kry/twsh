@@ -1,4 +1,5 @@
 #! /usr/bin/env python2
+# vim:fileencoding=UTF-8
 
 import sys
 import os
@@ -7,6 +8,7 @@ import tweepy
 import readline
 import pprint
 import traceback
+import tempfile
 
 DEFAULT_AUTHFILE = os.path.expanduser("~") + "/.twitter_auth"
 readline.parse_and_bind('tab: complete')
@@ -27,6 +29,7 @@ class TweetShell:
 				"new_auth": self.new_auth,
 				"login"   : self.login,
 				"whoami"  : self.whoami,
+				"tweet"   : self.tweet,
 			}
 	def shell_loop(self):
 		self.__current_user = None
@@ -45,6 +48,8 @@ class TweetShell:
 					sys.stdout.write(traceback.format_exc(sys.exc_info()[2]))
 		except EOFError:
 			sys.stdout.write("\n")
+	def tweet(self, text, *others):
+		pprint.pprint(tweepy.API(self.__current_user).update_status(text, *others).__dict__)
 	def new_auth(self, *arv):
 		pair = []
 		if self.__auth:
@@ -92,7 +97,7 @@ class TweetShell:
 			if m[0] not in self.commands:
 				sys.stdout.write("Command not found.")
 				return
-			self.commands[m[0]](m[1:len(m)])
+			self.commands[m[0]](*m[1:len(m)])
 
 if __name__ == "__main__":
 	authfile = DEFAULT_AUTHFILE
