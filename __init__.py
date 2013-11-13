@@ -25,12 +25,16 @@ class TweetShell:
 				sys.exit("Duplicated screen_name in the authfile.")
 			self.__auth[t[0]] = tweepy.OAuthHandler(t[1], t[2])
 			self.__auth[t[0]].set_access_token(t[3], t[4])
-		self.commands = {
+		self.__commands = {
 				"new_auth": self.new_auth,
 				"login"   : self.login,
 				"whoami"  : self.whoami,
 				"tweet"   : self.tweet,
+				"help"    : lambda *args: sys.stdout.writelines(map(lambda e: e + "\n", self.__commands.keys())),
 			}
+		#Synonims
+		self.__commands["?"] = self.__commands["help"]
+		self
 		self.__current_user = None
 		self.__prompt       = "> "
 	def shell_loop(self):
@@ -98,7 +102,7 @@ class TweetShell:
 			m = re.compile('\S+').findall(command)
 			if not m:
 				return
-			if m[0] not in self.commands:
+			if m[0] not in self.__commands:
 				sys.stdout.write("Command not found.")
 				return
-			self.commands[m[0]](*m[1:len(m)])
+			self.__commands[m[0]](*m[1:len(m)])
