@@ -6,6 +6,7 @@ import re
 import tweepy
 import readline
 import pprint
+import traceback
 
 DEFAULT_AUTHFILE = os.path.expanduser("~") + "/.twitter_auth"
 readline.parse_and_bind('tab: complete')
@@ -22,6 +23,11 @@ class TweetShell:
 				sys.exit("Duplicated screen_name in the authfile.")
 			self.__auth[t[0]] = tweepy.OAuthHandler(t[1], t[2])
 			self.__auth[t[0]].set_access_token(t[3], t[4])
+		self.commands = {
+				"new_auth": self.new_auth,
+				"login"   : self.login,
+				"whoami"  : self.whoami,
+			}
 	def shell_loop(self):
 		self.__current_user = None
 		self.__prompt       = "> "
@@ -35,14 +41,11 @@ class TweetShell:
 					raise
 				except KeyboardInterrupt:
 					sys.stdout.write("\n")
-				except Exception as e:
-					print "type: %s"    % type(e)
-					print "args: %s"    % e.args
-					print "message: %s" % e.message
-					print "e: %s"       % e
+				except:
+					sys.stdout.write(traceback.format_exc(sys.exc_info()[2]))
 		except EOFError:
 			sys.stdout.write("\n")
-	def new_auth(self):
+	def new_auth(self, *arv):
 		pair = []
 		if self.__auth:
 			sys.stdout.write("Please select screen_name which you want to use same consumer as (or EMPTY, new one) > ")
@@ -68,12 +71,28 @@ class TweetShell:
 		             fp)
 		fp.close()
 		fp = open(self.__authfile, "w")
-		pprint.pprint(org)
-		fp.truncate(0)
 		fp.writelines(org + ["%s %s %s %s %s\n" % (k, v._consumer.key, v._consumer.secret, v.access_token.key, v.access_token.secret) for k, v in self.__auth.items()])
+	def login(self, *argv):
+		term = open("/dev/tty", "r+w")
+		for sn in self.__auth.keys():
+			term.write("  @%s\n" % sn)
+		term.write("WHICH?> ")
+		sn = term.readline().strip()
+		if sn not in self.__auth.keys():
+			term.write("NOT FOUND.\n")
+		self.__current_user = self.__auth[sn]
+		self.__prompt = "%s> " % sn
+	def whoami(self, *argv):
+		pprint.pprint(tweepy.API(self.__current_user).me().__dict__)
 	def eval(self, *commands):
-		for command in commands:
-			None
+		for command in map(lambda l: l.strip(), commands):
+			m = re.compile('\S+').findall(command)
+			if not m:
+				return
+			if m[0] not in self.commands:
+				sys.stdout.write("Command not found.")
+				return
+			self.commands[m[0]](m[1:len(m)])
 
 if __name__ == "__main__":
 	authfile = DEFAULT_AUTHFILE
