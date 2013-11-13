@@ -98,13 +98,3 @@ class TweetShell:
 				sys.stdout.write("Command not found.")
 				return
 			self.commands[m[0]](*m[1:len(m)])
-
-if __name__ == "__main__":
-	authfile = DEFAULT_AUTHFILE
-	if "-f" in sys.argv:
-		idx = sys.argv.index("-f") + 1
-		if idx == len(sys.argv, 1):
-			sys.exit("-f option needs FILE NAME")
-		authfile = sys.argv[idx]
-	sh = TweetShell(authfile)
-	sh.shell_loop()
