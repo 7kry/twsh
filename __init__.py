@@ -26,15 +26,18 @@ class TweetShell:
 			self.__auth[t[0]] = tweepy.OAuthHandler(t[1], t[2])
 			self.__auth[t[0]].set_access_token(t[3], t[4])
 		self.__commands = {
-				"new_auth": self.new_auth,
-				"login"   : self.login,
-				"whoami"  : self.whoami,
-				"tweet"   : self.tweet,
-				"help"    : lambda *args: sys.stdout.writelines(map(lambda e: e + "\n", self.__commands.keys())),
+				"new_auth"  : self.new_auth,
+				"login"     : self.login,
+				"whoami"    : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).me().__dict__),
+				"tweet"     : self.tweet,
+				"follow_id" : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_friendship(*map(lambda x: int(x), argv)).__dict__),
+				"follow_sn" : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_friendship(*argv).__dict__),
+				"profile_id": lambda *argv: pprint.pprint(tweepy.API(self.__current_user).get_user(*map(lambda x: int(x), argv)).__dict__),
+				"profile_sn": lambda *argv: pprint.pprint(tweepy.API(self.__current_user).get_user(*argv).__dict__),
+				"help"      : lambda *args: sys.stdout.writelines(map(lambda e: e + "\n", self.__commands.keys())),
 			}
 		#Synonims
 		self.__commands["?"] = self.__commands["help"]
-		self
 		self.__current_user = None
 		self.__prompt       = "> "
 	def shell_loop(self):
@@ -95,14 +98,13 @@ class TweetShell:
 			return
 		self.__current_user = self.__auth[sn]
 		self.__prompt = "%s> " % sn
-	def whoami(self, *argv):
-		pprint.pprint(tweepy.API(self.__current_user).me().__dict__)
+	
 	def eval(self, *commands):
 		for command in map(lambda l: l.strip(), commands):
 			m = re.compile('\S+').findall(command)
 			if not m:
 				return
 			if m[0] not in self.__commands:
-				sys.stdout.write("Command not found.")
+				sys.stdout.write("Command not found.\n")
 				return
 			self.__commands[m[0]](*m[1:len(m)])
