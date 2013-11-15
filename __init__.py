@@ -29,13 +29,13 @@ class TweetShell:
 				"new_auth"   : self.new_auth,
 				"login"      : self.login,
 				"whoami"     : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).me().__dict__),
-				"tweet"      : self.tweet,
-				"tweet_stdin": lambda *argv: self.tweet(sys.stdin.read(), *argv),
+				"update"     : lambda *argv: self.update(sys.stdin.read(), *argv),
+				"favor"      : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_favorite(*map(lambda x: int(x), argv)).__dict__),
 				"follow_id"  : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_friendship(*map(lambda x: int(x), argv)).__dict__),
 				"follow_sn"  : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_friendship(*argv).__dict__),
 				"profile_id" : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).get_user(*map(lambda x: int(x), argv)).__dict__),
 				"profile_sn" : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).get_user(*argv).__dict__),
-				"help"       : lambda *args: sys.stdout.writelines(map(lambda e: e + "\n", self.__commands.keys())),
+				"help"       : lambda *args: sys.stdout.writelines(sorted(map(lambda e: e + "\n", self.__commands.keys()))),
 			}
 		#Synonims
 		self.__commands["?"] = self.__commands["help"]
@@ -45,7 +45,7 @@ class TweetShell:
 		try:
 			while True:
 				try:
-					line = raw_input(self.__prompt)
+					line = raw_input(self.__prompt if sys.stdin.isatty() else "")
 					line = line.strip()
 					self.eval(line)
 				except EOFError:
@@ -56,7 +56,7 @@ class TweetShell:
 					sys.stdout.write(traceback.format_exc(sys.exc_info()[2]))
 		except EOFError:
 			sys.stdout.write("\n")
-	def tweet(self, text, *others):
+	def update(self, text, *others):
 		pprint.pprint(tweepy.API(self.__current_user).update_status(text, *others).__dict__)
 	def new_auth(self, *arv):
 		pair = []
