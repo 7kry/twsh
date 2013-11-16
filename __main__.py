@@ -14,6 +14,6 @@ if "-e" in sys.argv:
 else:
 	rcfile = os.path.expanduser("~") + "/.twshellrc"
 	if os.path.exists(rcfile):
-		for line in open():
+		for line in open(rcfile):
 			sh.eval(line)
 	sh.shell_loop()
