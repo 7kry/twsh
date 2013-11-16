@@ -9,6 +9,7 @@ import readline
 import pprint
 import traceback
 import tempfile
+import subprocess
 
 DEFAULT_AUTHFILE = os.path.expanduser("~") + "/.twitter_auth"
 readline.parse_and_bind('tab: complete')
@@ -26,18 +27,19 @@ class TweetShell:
 			self.__auth[t[0]] = tweepy.OAuthHandler(t[1], t[2])
 			self.__auth[t[0]].set_access_token(t[3], t[4])
 		self.__commands = {
-				"new_auth"   : self.__new_auth,
-				"login"      : self.__login,
-				"whoami"     : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).me().__dict__),
-				"update"     : lambda *argv: self.__update(sys.stdin.read(), *argv),
-				"favor"      : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_favorite(*map(lambda x: int(x), argv)).__dict__),
-				"follow_id"  : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_friendship(*map(lambda x: int(x), argv)).__dict__),
-				"follow_sn"  : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_friendship(*argv).__dict__),
-				"profile_id" : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).get_user(*map(lambda x: int(x), argv)).__dict__),
-				"profile_sn" : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).get_user(*argv).__dict__),
-				"home"       : lambda *argv: self.__timeline(u"home", *argv),
-				"mentions"   : lambda *argv: self.__timeline(u"mentions", *argv),
-				"help"       : lambda *args: sys.stdout.writelines(sorted(map(lambda e: e + "\n", self.__commands.keys()))),
+				"new_auth"    : self.__new_auth,
+				"login"       : self.__login,
+				"whoami"      : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).me().__dict__),
+				"update_stdin": lambda *argv: self.__update(sys.stdin.read(), *argv),
+				"update"      : lambda *argv: self.__update_with_editor(*argv),
+				"favor"       : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_favorite(*map(lambda x: int(x), argv)).__dict__),
+				"follow_id"   : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_friendship(*map(lambda x: int(x), argv)).__dict__),
+				"follow_sn"   : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_friendship(*argv).__dict__),
+				"profile_id"  : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).get_user(*map(lambda x: int(x), argv)).__dict__),
+				"profile_sn"  : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).get_user(*argv).__dict__),
+				"home"        : lambda *argv: self.__timeline(u"home", *argv),
+				"mentions"    : lambda *argv: self.__timeline(u"mentions", *argv),
+				"help"        : lambda *args: sys.stdout.writelines(sorted(map(lambda e: e + "\n", self.__commands.keys()))),
 			}
 		#Synonims
 		self.__commands["?"]  = self.__commands["help"]
@@ -75,6 +77,14 @@ class TweetShell:
 		if l >= 1:
 			_argv.append(int(argv[0]))
 		pprint.pprint(tweepy.API(self.__current_user).update_status(text, *_argv).__dict__)
+	def __update_with_editor(self, *argv):
+		tmp = tempfile.mktemp()
+		edt = os.getenv("EDITOR", "vi")
+		subprocess.call([edt, tmp])
+		if not os.path.exists(tmp):
+			sys.stdout.write("Interrupt\n")
+			return
+		self.__update(open(tmp).read(), *argv)
 	def __new_auth(self, *arv):
 		pair = []
 		if self.__auth:
