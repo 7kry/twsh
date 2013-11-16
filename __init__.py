@@ -45,12 +45,12 @@ class TweetShell:
 		self.__current_user   = None
 		self.__prompt         = "> "
 		self.__tl_format      = u"""\
-@{screen_name} {id}:
+@{screen_name} {id} :
 {status}
 {date} via {source}
 """
 		self.__tl_rted_format = u"""\
-@{screen_name} {id} (RTed by @{rter_screen_name}):
+@{screen_name} {id} (RTed by @{rter_screen_name}) :
 {status}
 {date} via {source}
 """
