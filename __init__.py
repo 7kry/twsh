@@ -69,8 +69,12 @@ class TweetShell:
 					sys.stdout.write(traceback.format_exc(sys.exc_info()[2]))
 		except EOFError:
 			sys.stdout.write("\n")
-	def __update(self, text, *others):
-		pprint.pprint(tweepy.API(self.__current_user).update_status(text, *others).__dict__)
+	def __update(self, text, *argv):
+		_argv = []
+		l     = len(argv)
+		if l >= 1:
+			_argv.append(int(argv[0]))
+		pprint.pprint(tweepy.API(self.__current_user).update_status(text, *_argv).__dict__)
 	def __new_auth(self, *arv):
 		pair = []
 		if self.__auth:
