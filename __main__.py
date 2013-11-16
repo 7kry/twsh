@@ -1,6 +1,5 @@
 import __init__
-import sys
-import os
+from __init__ import *
 
 authfile = __init__.DEFAULT_AUTHFILE
 if "-r" in sys.argv:
