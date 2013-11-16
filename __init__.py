@@ -10,6 +10,7 @@ import pprint
 import traceback
 import tempfile
 import subprocess
+import xml.sax.saxutils
 
 DEFAULT_AUTHFILE = os.path.expanduser("~") + "/.twitter_auth"
 readline.parse_and_bind('tab: complete')
@@ -131,7 +132,7 @@ class TweetShell:
 					screen_name      = status.retweeted_status.author.screen_name,
 					rter_screen_name = status.author.screen_name,
 					id               = status.retweeted_status.id,
-					status           = status.retweeted_status.text,
+					status           = xml.sax.saxutils.unescape(status.retweeted_status.text),
 					date             = u"%s" % status.retweeted_status.created_at,
 					source           = status.retweeted_status.source,
 				)
@@ -139,7 +140,7 @@ class TweetShell:
 			return self.__tl_format.format(
 					screen_name = status.author.screen_name,
 					id          = status.id,
-					status      = status.text,
+					status      = xml.sax.saxutils.unescape(status.text),
 					date        = u"%s" % status.created_at,
 					source      = status.source,
 				)
