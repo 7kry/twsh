@@ -122,7 +122,7 @@ class TweetShell:
 			term.write("WHICH?> ")
 			sn = term.readline().strip()
 		if sn not in self.__auth.keys():
-			term.write("sn was NOT found.\n" % sn)
+			term.write("%s was NOT found.\n" % sn)
 			return
 		self.__current_user = self.__auth[sn]
 		self.__prompt = "%s> " % sn
@@ -148,10 +148,9 @@ class TweetShell:
 		sys.stdout.write("\n".join(map(self.__tl_stringify, reversed(tweepy.API.__dict__[tl_type + u'_timeline'](tweepy.API(self.__current_user), count=200)))))
 	def eval(self, *commands):
 		for command in map(lambda l: l.strip(), commands):
-			m = re.compile('\S+').findall(command)
-			if not m:
-				return
-			if m[0] not in self.__commands:
+			m = map(lambda e: e.group("quoted").replace("''", "'") if e.group("quoted") else e.group("literal"),
+				re.compile("(?:'(?P<quoted>(?:''|[^'])*)'|(?P<literal>\S+))").finditer(command))
+			if (m is not None) and (m[0] not in self.__commands):
 				sys.stdout.write("Command not found.\n")
 				return
 			self.__commands[m[0]](*m[1:len(m)])
