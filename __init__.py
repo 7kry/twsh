@@ -26,21 +26,34 @@ class TweetShell:
 			self.__auth[t[0]] = tweepy.OAuthHandler(t[1], t[2])
 			self.__auth[t[0]].set_access_token(t[3], t[4])
 		self.__commands = {
-				"new_auth"   : self.new_auth,
-				"login"      : self.login,
+				"new_auth"   : self.__new_auth,
+				"login"      : self.__login,
 				"whoami"     : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).me().__dict__),
-				"update"     : lambda *argv: self.update(sys.stdin.read(), *argv),
+				"update"     : lambda *argv: self.__update(sys.stdin.read(), *argv),
 				"favor"      : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_favorite(*map(lambda x: int(x), argv)).__dict__),
 				"follow_id"  : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_friendship(*map(lambda x: int(x), argv)).__dict__),
 				"follow_sn"  : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_friendship(*argv).__dict__),
 				"profile_id" : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).get_user(*map(lambda x: int(x), argv)).__dict__),
 				"profile_sn" : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).get_user(*argv).__dict__),
+				"home"       : lambda *argv: self.__timeline(u"home", *argv),
+				"mentions"   : lambda *argv: self.__timeline(u"mentions", *argv),
 				"help"       : lambda *args: sys.stdout.writelines(sorted(map(lambda e: e + "\n", self.__commands.keys()))),
 			}
 		#Synonims
-		self.__commands["?"] = self.__commands["help"]
-		self.__current_user = None
-		self.__prompt       = "> "
+		self.__commands["?"]  = self.__commands["help"]
+		# States & Settings
+		self.__current_user   = None
+		self.__prompt         = "> "
+		self.__tl_format      = u"""\
+@{screen_name} {id}:
+{status}
+{date} via {source}
+"""
+		self.__tl_rted_format = u"""\
+@{screen_name} {id} (RTed by @{rter_screen_name}):
+{status}
+{date} via {source}
+"""
 	def shell_loop(self):
 		try:
 			while True:
@@ -51,14 +64,14 @@ class TweetShell:
 				except EOFError:
 					raise
 				except KeyboardInterrupt:
-					sys.stdout.write("^C\n")
+					sys.stdout.write("KeyboardInterrupt\n")
 				except:
 					sys.stdout.write(traceback.format_exc(sys.exc_info()[2]))
 		except EOFError:
 			sys.stdout.write("\n")
-	def update(self, text, *others):
+	def __update(self, text, *others):
 		pprint.pprint(tweepy.API(self.__current_user).update_status(text, *others).__dict__)
-	def new_auth(self, *arv):
+	def __new_auth(self, *arv):
 		pair = []
 		if self.__auth:
 			sys.stdout.write("Please select screen_name which you want to use same consumer as (or EMPTY, new one) > ")
@@ -84,7 +97,7 @@ class TweetShell:
 		fp.close()
 		fp = open(self.__authfile, "w")
 		fp.writelines(org + ["%s %s %s %s %s\n" % (k, v._consumer.key, v._consumer.secret, v.access_token.key, v.access_token.secret) for k, v in self.__auth.items()])
-	def login(self, *argv):
+	def __login(self, *argv):
 		term = open(os.ctermid(), "r+w")
 		if argv:
 			sn = argv[0]
@@ -98,6 +111,26 @@ class TweetShell:
 			return
 		self.__current_user = self.__auth[sn]
 		self.__prompt = "%s> " % sn
+	def __tl_stringify(self, status):
+		if u"retweeted_status" in status.__dict__:
+			return self.__tl_rted_format.format(
+					screen_name      = status.retweeted_status.author.screen_name,
+					rter_screen_name = status.author.screen_name,
+					id               = status.retweeted_status.id,
+					status           = status.retweeted_status.text,
+					date             = u"%s" % status.retweeted_status.created_at,
+					source           = status.retweeted_status.source,
+				)
+		else:
+			return self.__tl_format.format(
+					screen_name = status.author.screen_name,
+					id          = status.id,
+					status      = status.text,
+					date        = u"%s" % status.created_at,
+					source      = status.source,
+				)
+	def __timeline(self, tl_type, *argv):
+		sys.stdout.write("\n".join(map(self.__tl_stringify, reversed(tweepy.API.__dict__[tl_type + u'_timeline'](tweepy.API(self.__current_user), count=200)))))
 	def eval(self, *commands):
 		for command in map(lambda l: l.strip(), commands):
 			m = re.compile('\S+').findall(command)
