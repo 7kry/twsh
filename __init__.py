@@ -87,7 +87,10 @@ class TweetShell:
 		if not os.path.exists(tmp):
 			sys.stdout.write("Interrupt\n")
 			return
-		self.__update(open(tmp).read(), *argv)
+		fp = open(tmp)
+		self.__update(fp.read(), *argv)
+		fp.close()
+		os.remove(tmp)
 	def __new_auth(self, *arv):
 		pair = []
 		if self.__auth:
