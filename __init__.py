@@ -33,6 +33,7 @@ class TweetShell:
 				"update_stdin": lambda *argv: self.__update(sys.stdin.read(), *argv),
 				"update"      : lambda *argv: self.__update_with_editor(*argv),
 				"favor"       : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_favorite(*map(lambda x: int(x), argv)).__dict__),
+				"retweet"     : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).retweet(*map(lambda x: int(x), argv)).__dict__),
 				"follow_id"   : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_friendship(*map(lambda x: int(x), argv)).__dict__),
 				"follow_sn"   : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_friendship(*argv).__dict__),
 				"profile_id"  : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).get_user(*map(lambda x: int(x), argv)).__dict__),
@@ -155,7 +156,9 @@ class TweetShell:
 		for command in map(lambda l: l.strip(), commands):
 			m = map(lambda e: e.group("quoted").replace("''", "'") if e.group("quoted") else e.group("literal"),
 				re.compile("(?:'(?P<quoted>(?:''|[^'])*)'|(?P<literal>\S+))").finditer(command))
-			if (m is not None) and (m[0] not in self.__commands):
+			if not m:
+				return
+			if (m[0] not in self.__commands):
 				sys.stdout.write("Command not found.\n")
 				return
 			self.__commands[m[0]](*m[1:len(m)])
