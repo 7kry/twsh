@@ -50,6 +50,7 @@ class TweetShell:
 		# States & Settings
 		self.__current_user   = None
 		self.__prompt         = "> "
+		self.__sn             = ""
 		self.__tl_format      = u"""\
 @{screen_name} {id} :
 {status}
@@ -82,7 +83,7 @@ class TweetShell:
 			_argv.append(int(argv[0]))
 		pprint.pprint(tweepy.API(self.__current_user).update_status(text, *_argv).__dict__)
 	def __update_with_editor(self, *argv):
-		tmp = tempfile.mktemp()
+		tmp = tempfile.mktemp(prefix = 'twshell-%s-' % self.__sn)
 		edt = os.getenv("EDITOR", "vi")
 		subprocess.call([edt, tmp])
 		if not os.path.exists(tmp):
@@ -132,6 +133,7 @@ class TweetShell:
 			return
 		self.__current_user = self.__auth[sn]
 		self.__prompt = "%s> " % sn
+		self.__sn     = sn
 	def __tl_stringify(self, status):
 		if u"retweeted_status" in status.__dict__:
 			return self.__tl_rted_format.format(
