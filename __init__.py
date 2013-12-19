@@ -38,11 +38,11 @@ class TweetShell:
 				"follow_sn"   : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_friendship(*argv).__dict__),
 				"profile_id"  : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).get_user(*map(lambda x: int(x), argv)).__dict__),
 				"profile_sn"  : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).get_user(*argv).__dict__),
-				"profile_sn"  : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).get_user(*argv).__dict__),
 				"user_sn"     : lambda sn:    sys.stdout.write("\n".join(map(self.__tl_stringify, reversed(tweepy.API(self.__current_user).user_timeline(count=200, screen_name=sn))))),
-				"user_sn"     : lambda uid:    sys.stdout.write("\n".join(map(self.__tl_stringify, reversed(tweepy.API(self.__current_user).user_timeline(count=200, id=uid))))),
+				"user_id"     : lambda uid:    sys.stdout.write("\n".join(map(self.__tl_stringify, reversed(tweepy.API(self.__current_user).user_timeline(count=200, id=uid))))),
 				"home"        : lambda *argv: self.__timeline(u"home", *argv),
 				"mentions"    : lambda *argv: self.__timeline(u"mentions", *argv),
+				"destroy"     : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).destroy_status(*map(lambda x: int(x), argv)).__dict__),
 				"help"        : lambda *args: sys.stdout.writelines(sorted(map(lambda e: e + "\n", self.__commands.keys()))),
 			}
 		#Synonims
