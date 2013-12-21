@@ -81,7 +81,7 @@ class TweetShell:
 		l     = len(argv)
 		if l >= 1:
 			_argv.append(int(argv[0]))
-		pprint.pprint(tweepy.API(self.__current_user).update_status(text, *_argv).__dict__)
+		sys.stdout.write(self.__tl_stringify(tweepy.API(self.__current_user).update_status(text, *_argv)))
 	def __update_with_editor(self, *argv):
 		tmp = tempfile.mktemp(prefix = 'twshell-%s-' % self.__sn)
 		edt = os.getenv("EDITOR", "vi")
