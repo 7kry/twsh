@@ -33,6 +33,7 @@ class TweetShell:
 				"update_stdin": lambda *argv: self.__update(sys.stdin.read(), *argv),
 				"update"      : lambda *argv: self.__update_with_editor(*argv),
 				"favor"       : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_favorite(*map(lambda x: int(x), argv)).__dict__),
+				"unfavor"     : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).destroy_favorite(*map(lambda x: int(x), argv)).__dict__),
 				"retweet"     : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).retweet(*map(lambda x: int(x), argv)).__dict__),
 				"follow_id"   : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_friendship(*map(lambda x: int(x), argv)).__dict__),
 				"follow_sn"   : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_friendship(*argv).__dict__),
@@ -40,9 +41,11 @@ class TweetShell:
 				"profile_sn"  : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).get_user(*argv).__dict__),
 				"user_sn"     : lambda sn:    sys.stdout.write("\n".join(map(self.__tl_stringify, reversed(tweepy.API(self.__current_user).user_timeline(count=200, screen_name=sn))))),
 				"user_id"     : lambda uid:    sys.stdout.write("\n".join(map(self.__tl_stringify, reversed(tweepy.API(self.__current_user).user_timeline(count=200, id=uid))))),
-				"home"        : lambda *argv: self.__timeline(u"home", *argv),
-				"mentions"    : lambda *argv: self.__timeline(u"mentions", *argv),
+				"home"        : lambda *argv: self.__timeline(u"home_timeline", *argv),
+				"mentions"    : lambda *argv: self.__timeline(u"mentions_timeline", *argv),
+				"favorites"   : lambda *argv: self.__timeline(u"favorites", *argv),
 				"destroy"     : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).destroy_status(*map(lambda x: int(x), argv)).__dict__),
+				"shell"       : lambda *argv: subprocess.call(argv),
 				"help"        : lambda *args: sys.stdout.writelines(sorted(map(lambda e: e + "\n", self.__commands.keys()))),
 			}
 		#Synonims
@@ -57,7 +60,7 @@ class TweetShell:
 {date} via {source}
 """
 		self.__tl_rted_format = u"""\
-@{screen_name} {id} (RTed by @{rter_screen_name}) :
+@{screen_name} (RTed by @{rter_screen_name}) {id} :
 {status}
 {date} via {source}
 """
@@ -153,7 +156,7 @@ class TweetShell:
 					source      = status.source,
 				)
 	def __timeline(self, tl_type, *argv):
-		sys.stdout.write("\n".join(map(self.__tl_stringify, reversed(tweepy.API.__dict__[tl_type + u'_timeline'](tweepy.API(self.__current_user), count=200, *argv)))))
+		sys.stdout.write("\n".join(map(self.__tl_stringify, reversed(tweepy.API.__dict__[tl_type](tweepy.API(self.__current_user), count=200, *argv)))))
 	def eval(self, *commands):
 		for command in map(lambda l: l.strip(), commands):
 			m = map(lambda e: e.group("quoted").replace("''", "'") if e.group("quoted") else e.group("literal"),
