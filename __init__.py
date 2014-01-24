@@ -32,11 +32,14 @@ class TweetShell:
 				"whoami"      : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).me().__dict__),
 				"update_stdin": lambda *argv: self.__update(sys.stdin.read(), *argv),
 				"update"      : lambda *argv: self.__update_with_editor(*argv),
+				"update_photo": lambda *argv: self.__update_with_photo(*argv),
 				"favor"       : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_favorite(*map(lambda x: int(x), argv)).__dict__),
 				"unfavor"     : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).destroy_favorite(*map(lambda x: int(x), argv)).__dict__),
 				"retweet"     : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).retweet(*map(lambda x: int(x), argv)).__dict__),
 				"follow_id"   : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_friendship(*map(lambda x: int(x), argv)).__dict__),
 				"follow_sn"   : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).create_friendship(*argv).__dict__),
+				"unfollow_id"   : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).destroy_friendship(*map(lambda x: int(x), argv)).__dict__),
+				"unfollow_sn"   : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).destroy_friendship(*argv).__dict__),
 				"profile_id"  : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).get_user(*map(lambda x: int(x), argv)).__dict__),
 				"profile_sn"  : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).get_user(*argv).__dict__),
 				"user_sn"     : lambda sn:    sys.stdout.write("\n".join(map(self.__tl_stringify, reversed(tweepy.API(self.__current_user).user_timeline(count=200, screen_name=sn))))),
@@ -85,6 +88,21 @@ class TweetShell:
 		if l >= 1:
 			_argv.append(int(argv[0]))
 		sys.stdout.write(self.__tl_stringify(tweepy.API(self.__current_user).update_status(text, *_argv)))
+	def __update_with_photo(self, *argv):
+		_argv = []
+		tmp = tempfile.mktemp(prefix = 'twshell-%s-' % self.__sn)
+		edt = os.getenv("EDITOR", "vi")
+		subprocess.call([edt, tmp])
+		if not os.path.exists(tmp):
+			sys.stdout.write("Interrupt\n")
+			return
+		fp = open(tmp)
+		sys.stdout.write(self.__tl_stringify(
+			tweepy.API(self.__current_user).update_with_media(argv[0], status = fp.read().rstrip(), in_reply_to_status_id = int(argv[1]))\
+				if len(argv) >= 2 else\
+				tweepy.API(self.__current_user).update_with_media(argv[0], status = fp.read().rstrip())))
+		fp.close()
+		os.remove(tmp)
 	def __update_with_editor(self, *argv):
 		tmp = tempfile.mktemp(prefix = 'twshell-%s-' % self.__sn)
 		edt = os.getenv("EDITOR", "vi")
