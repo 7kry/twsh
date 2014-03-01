@@ -106,12 +106,21 @@ class TweetShell:
 	def __update_with_editor(self, *argv):
 		tmp = tempfile.mktemp(prefix = 'twshell-%s-' % self.__sn)
 		edt = os.getenv("EDITOR", "vi")
-		subprocess.call([edt, tmp])
-		if not os.path.exists(tmp):
-			sys.stdout.write("Interrupt\n")
-			return
-		fp = open(tmp)
-		self.__update(fp.read(), *argv)
+		while True:
+			subprocess.call([edt, tmp])
+			if not os.path.exists(tmp):
+				sys.stdout.write("Interrupt\n")
+				return
+			fp = open(tmp)
+			txt = fp.read()
+			print(txt)
+			sys.stdout.write("OK? ([y]es/[c]ancel/or else to re-edit)> ")
+			answer = sys.stdin.readline(1)
+			if answer == "y":
+				self.__update(fp.read(), *argv)
+				break
+			if answer == "c":
+				break
 		fp.close()
 		os.remove(tmp)
 	def __new_auth(self, *arv):
