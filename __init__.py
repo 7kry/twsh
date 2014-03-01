@@ -117,7 +117,7 @@ class TweetShell:
 			sys.stdout.write("OK? ([y]es/[c]ancel/or else to re-edit)> ")
 			answer = sys.stdin.readline(1)
 			if answer == "y":
-				self.__update(fp.read(), *argv)
+				self.__update(txt, *argv)
 				break
 			if answer == "c":
 				break
