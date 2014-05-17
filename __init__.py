@@ -30,6 +30,7 @@ class TweetShell:
 				"new_auth"    : self.__new_auth,
 				"login"       : self.__login,
 				"whoami"      : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).me().__dict__),
+				"whois"       : lambda *argv: pprint.pprint(tweepy.API(self.__current_user).get_user(screen_name = argv[0]).__dict__),
 				"update_stdin": lambda *argv: self.__update(sys.stdin.read(), *argv),
 				"update"      : lambda *argv: self.__update_with_editor(*argv),
 				"update_photo": lambda *argv: self.__update_with_photo(*argv),
