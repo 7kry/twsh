@@ -173,7 +173,7 @@ class TweetShell:
 					id               = status.id,
 					status           = xml.sax.saxutils.unescape(status.retweeted_status.text),
 					date             = u"%s" % status.retweeted_status.created_at,
-					source           = status.retweeted_status.source,
+					source           = "%s (RTed by %s)" % (status.retweeted_status.source, status.source),
 				)
 		else:
 			return self.__tl_format.format(
