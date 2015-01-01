@@ -37,7 +37,7 @@ class TweetShell(cmd.Cmd):
         yaml.dump(self.__auth, fp)
 
   def __resolve_entities(org, entities):
-    urls = dict(map(lambda elem: (elem['url'], elem['expanded_url']), entities['urls']))
+    urls = dict(map(lambda elem: (elem['url'], elem['expanded_url']), entities.get('urls', []) + entities.get('media', [])))
     return re.sub(
               r'https?://t\.co/[a-z0-9]+',
               lambda tco: urls.get(tco.group(0), tco.group(0)),
