@@ -45,16 +45,31 @@ class TweetShell(cmd.Cmd):
               flags = re.I | re.M)
 
   def __stringify_status(status):
+    header = '@%s (%s)' % (status.author.screen_name, status.author.name)
+    text = status.text
+    entities = status.entities
+    date = status.created_at
+    source = status.source
+    if 'retweeted_status' in status.__dict__:
+      rstatus = status.retweeted_status
+      header += ' retweets @%s (%s)' % (rstatus.author.screen_name, rstatus.author.name)
+      text = rstatus.text
+      entities = rstatus.entities
+      date = rstatus.created_at
+      source = '%s (retweeted by %s)' % (rstatus.source, source)
+
     return '''\
-@{screen_name}: {name}
+{header}
 {text}
 {date} via {source}'''.format(
-      screen_name = status.author.screen_name,
-      name = status.author.name,
-      text = TweetShell.__resolve_entities(status.text, status.entities),
-      date = status.created_at,
-      source = status.source
+      header = header,
+      text = TweetShell.__resolve_entities(text, entities),
+      date = date,
+      source = source,
     )
+
+  def do_home(self, arg):
+    print("\n\n".join(map(TweetShell.__stringify_status, reversed(self.__api.home_timeline(count = self.__timeline_count)))))
 
   def do_mentions(self, arg):
     print("\n\n".join(map(TweetShell.__stringify_status, reversed(self.__api.mentions_timeline(count = self.__timeline_count)))))
