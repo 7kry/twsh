@@ -7,6 +7,7 @@ import yaml
 import tweepy
 import subprocess
 import tempfile
+import re
 
 class TweetShell(cmd.Cmd):
   prompt = '(nologin)> '
@@ -14,6 +15,7 @@ class TweetShell(cmd.Cmd):
   __consumer_sec = 'edB8pOHB9XSN0waHg8fiHWCGfb5Cur8LbF7yEzXpE'
   __current_auth = None
   __api = None
+  __timeline_count = 200
 
   def __init__(self, authfile = os.path.expanduser('~/.twshell_auth')):
     cmd.Cmd.__init__(self)
@@ -33,14 +35,29 @@ class TweetShell(cmd.Cmd):
       self.__auth = {}
       with open(self.__authfile, 'w') as fp:
         yaml.dump(self.__auth, fp)
+
+  def __resolve_entities(org, entities):
+    urls = dict(map(lambda elem: (elem['url'], elem['expanded_url']), entities['urls']))
+    return re.sub(
+              r'https?://t\.co/[a-z0-9]+',
+              lambda tco: urls.get(tco.group(0), tco.group(0)),
+              org,
+              flags = re.I | re.M)
+
   def __stringify_status(status):
     return '''\
 @{screen_name}: {name}
 {text}
-{date} via {source}'''.format(screen_name = status.author.screen_name, name = status.author.name, text = status.text, date = status.created_at, source = status.source)
+{date} via {source}'''.format(
+      screen_name = status.author.screen_name,
+      name = status.author.name,
+      text = TweetShell.__resolve_entities(status.text, status.entities),
+      date = status.created_at,
+      source = status.source
+    )
 
   def do_mentions(self, arg):
-    print("\n\n".join(map(TweetShell.__stringify_status, reversed(self.__api.mentions_timeline()))))
+    print("\n\n".join(map(TweetShell.__stringify_status, reversed(self.__api.mentions_timeline(count = self.__timeline_count)))))
 
   def do_login(self, identifier):
     self.__login(self.__auth[identifier])
