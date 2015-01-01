@@ -5,6 +5,8 @@ import cmd
 import os.path
 import yaml
 import tweepy
+import subprocess
+import tempfile
 
 class TweetShell(cmd.Cmd):
   prompt = '(nologin)> '
@@ -43,6 +45,17 @@ class TweetShell(cmd.Cmd):
   def do_login(self, identifier):
     self.__login(self.__auth[identifier])
     self.prompt = '%s> ' % identifier
+
+  def do_update(self, arg):
+    text = None
+    with tempfile.NamedTemporaryFile(prefix = 'twshell-') as fp:
+      subprocess.call(' '.join([os.getenv('EDITOR', 'vi'), fp.name]), shell = True)
+      fp.seek(0)
+      text = fp.read().strip()
+    if not text:
+      print('Interrupted because text is empty...')
+      return
+    print(TweetShell.__stringify_status(self.__api.update_status(text)))
 
   def do_EOF(self, *argv):
     sys.exit(0)
