@@ -1,10 +1,14 @@
 #! /usr/bin/env python3
 
 import traceback
+import os.path
 
 from __init__ import *
 
 sh = TweetShell()
+
+for line in open(os.path.expanduser('~/.twshellrc')):
+  sh.onecmd(line)
 
 while True:
   try:
