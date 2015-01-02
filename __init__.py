@@ -1,14 +1,15 @@
 #! /usr/bin/env python3
 
-import sys
 import cmd
+import html
 import os.path
-import yaml
-import tweepy
-import subprocess
-import tempfile
 import re
+import subprocess
+import sys
+import tempfile
+import tweepy
 import webbrowser
+import yaml
 
 class TweetShell(cmd.Cmd):
   prompt = '(nologin)> '
@@ -80,7 +81,7 @@ class TweetShell(cmd.Cmd):
     alph = self.__alloc_alph(status.id)
     self.__store_status(status)
     header = '@%s (%s)' % (status.author.screen_name, status.author.name)
-    text = status.text
+    text = html.unescape(status.text)
     entities = status.entities
     date = status.created_at
     source = status.source
