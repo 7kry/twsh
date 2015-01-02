@@ -71,6 +71,7 @@ class TweetShell(cmd.Cmd):
 
   def __stringify_status(self, status):
     alph = self.__alloc_alph(status.id)
+    self.__store_status(status)
     header = '@%s (%s)' % (status.author.screen_name, status.author.name)
     text = status.text
     entities = status.entities
@@ -100,8 +101,6 @@ class TweetShell(cmd.Cmd):
 
   def __do_timeline(self, tlfunc):
     timeline = tlfunc(count = self.__timeline_count)
-    for elem in timeline:
-      self.__store_status(elem)
     print("\n\n".join(map(self.__stringify_status, reversed(timeline))))
 
   def do_home(self, arg):
@@ -123,6 +122,10 @@ class TweetShell(cmd.Cmd):
   def do_user(self, arg):
     argdict = TweetShell.__parse_userarg(arg)
     return self.__do_timeline(lambda count: self.__api.user_timeline(count = count, **argdict))
+
+  def do_favs(self, arg):
+    argdict = TweetShell.__parse_userarg(arg)
+    return self.__do_timeline(lambda count: self.__api.favorites(count = count, **argdict))
 
   def do_list(self, arg):
     argdict = {}
@@ -162,6 +165,21 @@ class TweetShell(cmd.Cmd):
       return int(alph)
     return self.__alph_id[alph]
 
+  def do_fav(self, alph):
+    faved = self.__api.create_favorite(id = self.__seek_alph(alph))
+    print(self.__stringify_status(faved))
+
+  def do_unfav(self, alph):
+    faved = self.__api.destroy_favorite(id = self.__seek_alph(alph))
+    print(self.__stringify_status(faved))
+
+  def do_retweet(self, alph):
+    retweeted = self.__api.retweet(self.__seek_alph(alph))
+    print(self.__stringify_status(retweeted))
+
+  def do_destroy(self, alph):
+    print(self.__stringify_status(self.__api.destroy_status(self.__seek_alph(alph))))
+
   def do_update(self, arg):
     text = None
     in_reply_to_status_id = None
@@ -176,7 +194,11 @@ class TweetShell(cmd.Cmd):
       if not text:
         print('Interrupted because text is empty...')
         return
-      print(self.__stringify_status(self.__api.update_status(text, in_reply_to_status_id = in_reply_to_status_id)))
+      print(
+          self.__stringify_status(
+            self.__api.update_status(
+              text,
+              in_reply_to_status_id = in_reply_to_status_id)))
 
   def do_EOF(self, *argv):
     sys.exit(0)
