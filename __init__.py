@@ -110,14 +110,39 @@ class TweetShell(cmd.Cmd):
   def do_mentions(self, arg):
     return self.__do_timeline(self.__api.mentions_timeline)
 
-  def do_user(self, arg):
+  def __parse_userarg(arg):
     argdict = {}
-    if arg:
+    if arg.startswith('@'):
+      argdict['screen_name'] = arg[1:]
+    elif re.match('^\d+$', arg):
+      argdict['id'] = int(arg)
+    else:
       argdict['screen_name'] = arg
+    return argdict
+
+  def do_user(self, arg):
+    argdict = TweetShell.__parse_userarg(arg)
     return self.__do_timeline(lambda count: self.__api.user_timeline(count = count, **argdict))
 
+  def do_list(self, arg):
+    argdict = {}
+    m = re.match('^@?(.*?)/(.+)', arg)
+    if m:
+      if m.group(1):
+        argdict['owner_screen_name'] = m.group(1)
+      argdict['slug'] = m.group(2)
+    elif re.match('^\d+$', arg):
+      argdict['list_id'] = int(arg)
+    else:
+      argdict['slug'] = arg
+    return self.__do_timeline(lambda count: self.__api.list_timeline(count = count, **argdict))
+
   def do_lslists(self, arg):
-    ls = self.__api.lists_all()
+    argdict = TweetShell.__parse_userarg(arg)
+    if 'id' in argdict:
+      argdict['user_id'] = argdict['id']
+      del argdict['id']
+    ls = self.__api.lists_all(**argdict)
     for elem in ls:
       print('{full_name} {id} {description}'.format(
           full_name = elem.full_name,
