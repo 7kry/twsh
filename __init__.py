@@ -60,8 +60,11 @@ class TweetShell(cmd.Cmd):
     self.__alph_id[ret] = id
     return ret
 
+  def __urlsdict(entities):
+    return dict(map(lambda elem: (elem['url'], elem['expanded_url']), entities.get('urls', []) + entities.get('media', [])))
+
   def __resolve_entities(org, entities):
-    urls = dict(map(lambda elem: (elem['url'], elem['expanded_url']), entities.get('urls', []) + entities.get('media', [])))
+    urls = TweetShell.__urlsdict(entities)
     return re.sub(
               r'https?://t\.co/[a-z0-9]+',
               lambda tco: urls.get(tco.group(0), tco.group(0)),
@@ -155,6 +158,13 @@ class TweetShell(cmd.Cmd):
   def do_favs(self, arg):
     argdict = TweetShell.__parse_userarg(arg)
     return self.__do_timeline(lambda count: self.__api.favorites(count = count, **argdict))
+
+  def do_openurls(self, alph):
+    status = self.__statuses[self.__seek_alph(alph)]
+    if 'retweeted_status' in status.__dict__:
+      status = status.retweeted_status
+    for url in TweetShell.__urlsdict(status.entities).values():
+      webbrowser.open(url)
 
   def do_list(self, arg):
     argdict = {}
