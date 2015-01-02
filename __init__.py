@@ -130,10 +130,13 @@ class TweetShell(cmd.Cmd):
     if m:
       if m.group(1):
         argdict['owner_screen_name'] = m.group(1)
+      else:
+        argdict['owner_id'] = self.__credentials.id
       argdict['slug'] = m.group(2)
     elif re.match('^\d+$', arg):
       argdict['list_id'] = int(arg)
     else:
+      argdict['owner_id'] = self.__credentials.id
       argdict['slug'] = arg
     return self.__do_timeline(lambda count: self.__api.list_timeline(count = count, **argdict))
 
@@ -151,9 +154,12 @@ class TweetShell(cmd.Cmd):
 
   def do_login(self, identifier):
     self.__login(self.__auth[identifier])
-    self.prompt = '%s> ' % identifier
+    self.__credentials = self.__api.verify_credentials()
+    self.prompt = '@%s> ' % self.__credentials.screen_name
 
   def __seek_alph(self, alph):
+    if re.match('^\d+$', alph):
+      return int(alph)
     return self.__alph_id[alph]
 
   def do_update(self, arg):
