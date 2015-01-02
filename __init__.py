@@ -8,6 +8,7 @@ import tweepy
 import subprocess
 import tempfile
 import re
+import webbrowser
 
 class TweetShell(cmd.Cmd):
   prompt = '(nologin)> '
@@ -37,8 +38,11 @@ class TweetShell(cmd.Cmd):
         self.__auth = yaml.load(fp)
     else:
       self.__auth = {}
-      with open(self.__authfile, 'w') as fp:
-        yaml.dump(self.__auth, fp)
+      self.__save_authfile()
+
+  def __save_authfile(self):
+    with open(self.__authfile, 'w') as fp:
+      yaml.dump(self.__auth, fp)
 
   def __twentysix_generator(num):
     while True:
@@ -98,6 +102,31 @@ class TweetShell(cmd.Cmd):
 
   def emptyline(self):
     None
+
+  def do_ckcs(self, arg):
+    ck, cs = arg.split()
+    self.__consumer_key = ck
+    self.__consumer_sec = cs
+
+  def do_newauth(self, arg):
+    auth = tweepy.OAuthHandler(self.__consumer_key, self.__consumer_sec)
+    url = auth.get_authorization_url()
+    print('opening: %s' % url)
+    webbrowser.open(url)
+    sys.stdout.write('PIN> ')
+    verifier = input().strip()
+    auth.get_access_token(verifier = verifier)
+    sys.stdout.write('Your indentifier> ')
+    iden = input().strip()
+    self.__auth[iden] = {
+      'consumer_key': auth.consumer_key,
+      'consumer_secret': auth.consumer_secret,
+      'token': auth.access_token,
+      'token_secret': auth.access_token_secret,
+    }
+    self.__save_authfile()
+    self.__current_auth = auth
+    self.do_login(iden)
 
   def __do_timeline(self, tlfunc):
     timeline = tlfunc(count = self.__timeline_count)
