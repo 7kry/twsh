@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+# vim:fileencoding=utf-8
 
 import cmd
 import dateutil.tz
@@ -82,6 +83,8 @@ class TweetShell(cmd.Cmd):
     alph = self.__alloc_alph(status.id)
     self.__store_status(status)
     header = '@%s (%s)' % (status.author.screen_name, status.author.name)
+    if status.author.protected:
+      header = '🔒' + header
     text = html.unescape(status.text)
     entities = status.entities
     date = status.created_at.replace(tzinfo = dateutil.tz.tzutc()).astimezone(dateutil.tz.tzlocal())
