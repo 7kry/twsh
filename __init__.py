@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import cmd
+import dateutil.tz
 import html
 import os.path
 import re
@@ -83,7 +84,7 @@ class TweetShell(cmd.Cmd):
     header = '@%s (%s)' % (status.author.screen_name, status.author.name)
     text = html.unescape(status.text)
     entities = status.entities
-    date = status.created_at
+    date = status.created_at.replace(tzinfo = dateutil.tz.tzutc()).astimezone(dateutil.tz.tzlocal())
     source = status.source
     if 'retweeted_status' in status.__dict__:
       rstatus = status.retweeted_status
