@@ -3,7 +3,7 @@
 import traceback
 import os.path
 
-from tweetshell import *
+from twsh import *
 
 RCFILE = os.path.expanduser('~/.twshellrc')
 
