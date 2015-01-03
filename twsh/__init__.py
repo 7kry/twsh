@@ -164,6 +164,12 @@ class TweetShell(cmd.Cmd):
     argdict = TweetShell.__parse_userarg(arg)
     return self.__do_timeline(lambda count: self.__api.favorites(count = count, **argdict))
 
+  def do_empty(self, arg):
+    self.__statuses = {}
+    self.__alph_id = {}
+    self.__id_alph = {}
+    self.__alph = 0
+
   def do_openurls(self, alph):
     status = self.__statuses[self.__seek_alph(alph)]
     if 'retweeted_status' in status.__dict__:
