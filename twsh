@@ -3,12 +3,15 @@
 import traceback
 import os.path
 
-from __init__ import *
+from tweetshell import *
+
+RCFILE = os.path.expanduser('~/.twshellrc')
 
 sh = TweetShell()
 
-for line in open(os.path.expanduser('~/.twshellrc')):
-  sh.onecmd(line)
+if os.path.exists(RCFILE):
+  for line in open(RCFILE):
+    sh.onecmd(line)
 
 while True:
   try:
